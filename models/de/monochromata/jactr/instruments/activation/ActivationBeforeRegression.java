@@ -31,7 +31,9 @@ public class ActivationBeforeRegression extends AbstractInstrument {
 
 	public static final String PARAM_ACTIVATION_BEFORE_REGRESSION_LOG_FILE_NAME = "activationBeforeRegressionLogFileName";
 	public static final String PARAM_LOG_SEPARATOR = "logSeparator";
+	public static final String PARAM_LOG_INDIRECT_ANAPHORS_ONLY = "logIndirectAnaphorsOnly";
 	
+	private boolean logIndirectAnaphorsOnly;
 	private Map<Integer,UnderspecifiedRelation> underspecifiedRelations = new HashMap<>();
 	private PrintWriter logWriter;
 	private LoggingListener listener;
@@ -66,7 +68,8 @@ public class ActivationBeforeRegression extends AbstractInstrument {
 	protected Collection<String> createPossibleParameters() {
 		return Arrays.asList(new String[] {
 				PARAM_ACTIVATION_BEFORE_REGRESSION_LOG_FILE_NAME,
-				PARAM_LOG_SEPARATOR
+				PARAM_LOG_SEPARATOR,
+				PARAM_LOG_INDIRECT_ANAPHORS_ONLY
 		});
 	}
 	
@@ -81,6 +84,7 @@ public class ActivationBeforeRegression extends AbstractInstrument {
 				() -> { return logWriter; },
 				writer -> { logWriter = writer; });
 		listener = new LoggingListener(dm, logWriter);
+		logIndirectAnaphorsOnly = Boolean.parseBoolean(getParameter(PARAM_LOG_INDIRECT_ANAPHORS_ONLY));
 		twm.addListener(listener);
 	}
 
@@ -134,7 +138,7 @@ public class ActivationBeforeRegression extends AbstractInstrument {
 		
 		protected synchronized void maybeLogComputedActivation(String action, double startTime, IChunk chunk) {
 			if(currentAnaphorInfo != null
-					&& currentAnaphorInfo.getDaia().equals("ia")
+					&& (!logIndirectAnaphorsOnly || currentAnaphorInfo.getDaia().equals("ia"))
 					&& !specifiedOrInstantiatedAnaphors.contains(currentAnaphorInfo.getId())) {
 				specifiedOrInstantiatedAnaphors.add(currentAnaphorInfo.getId());
 				logComputedActivation(action, currentAnaphorInfo.getId(), startTime, chunk);

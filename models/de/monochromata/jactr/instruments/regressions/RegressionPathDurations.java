@@ -20,7 +20,9 @@ public class RegressionPathDurations extends FixationDurations {
 
 	public static final String GENERATED_REGRESSION_PATHS_LOG_FILE_NAME = "generatedRegressionPathsLogFileName";
 	public static final String AGGREGATED_REGRESSION_PATHS_LOG_FILE_NAME = "aggregatedRegressionPathsLogFileName";
+	public static final String PARAM_LOG_INDIRECT_ANAPHORS_ONLY = "logIndirectAnaphorsOnly";
 	
+	private boolean logIndirectAnaphorsOnly;
 	private PrintWriter aggregateWriter;
 
 	@Override
@@ -28,7 +30,8 @@ public class RegressionPathDurations extends FixationDurations {
 		return Arrays.asList(new String[] {
 				GENERATED_REGRESSION_PATHS_LOG_FILE_NAME,
 				AGGREGATED_REGRESSION_PATHS_LOG_FILE_NAME,
-				LOG_SEPARATOR
+				LOG_SEPARATOR,
+				PARAM_LOG_INDIRECT_ANAPHORS_ONLY
 		});
 	}
 
@@ -36,13 +39,19 @@ public class RegressionPathDurations extends FixationDurations {
 	protected LoggingListener createListener() {
 		String logFileName = getParameter(GENERATED_REGRESSION_PATHS_LOG_FILE_NAME);
 		String aggregateLogFileName = getParameter(AGGREGATED_REGRESSION_PATHS_LOG_FILE_NAME);
-		return new LoggingListener(getLogWriter(logFileName),
+		return new LoggingListener(logIndirectAnaphorsOnly, getLogWriter(logFileName),
 				getLogWriter(aggregateLogFileName,
 						() -> { return aggregateWriter; },
 						writer -> { aggregateWriter = writer; }),
 				getSeparator());
 	}
 	
+	@Override
+	public void install(IModel model) {
+		logIndirectAnaphorsOnly = Boolean.parseBoolean(getParameter(PARAM_LOG_INDIRECT_ANAPHORS_ONLY));
+		super.install(model);
+	}
+
 	@Override
 	public void uninstall(IModel model) {
 		super.uninstall(model);
@@ -53,14 +62,17 @@ public class RegressionPathDurations extends FixationDurations {
 
 	protected static class LoggingListener extends FixationDurations.LoggingListener {
 
+		protected final boolean logIndirectAnaphorsOnly;
 		protected final PrintWriter aggregateWriter;
 		protected List<GeneratedFixation> fixationsOnCurrentPath = new ArrayList<>();
 		protected List<RegressionPath> iaRegressionPaths = new ArrayList<>();
 		
-		protected LoggingListener(PrintWriter writer,
+		protected LoggingListener(boolean logIndirectAnaphorsOnly,
+				PrintWriter writer,
 				PrintWriter aggregateWriter,
 				String separator) {
 			super(writer, separator);
+			this.logIndirectAnaphorsOnly = logIndirectAnaphorsOnly;
 			this.aggregateWriter = aggregateWriter;
 		}
 
@@ -111,16 +123,18 @@ public class RegressionPathDurations extends FixationDurations {
 			GeneratedFixation firstFixationOnPath = fixationsOnCurrentPath.get(0);
 			Fixation empFix = firstFixationOnPath.empiricalFixation;
 			RegressionInfo regressionInfo = empFix.getRegressionInfo();
-			String aoiInfo = 
-					separator+regressionInfo.getId()
-					+separator+regressionInfo.getDaia()
-					+separator+regressionInfo.getKind()
-					+separator+regressionInfo.getRelationActivation();
-			logDuration(LOGGER, aoiInfo, empFix,
-					empFix.getStartTimestampMs(),
-					empiricalPathDurationMs.count,
-					firstFixationOnPath.generatedStart, generatedPathDurationMs.count,
-					generatedPathDurationMs.count-empiricalPathDurationMs.count);
+			if(!logIndirectAnaphorsOnly || regressionInfo.getDaia().equals("ia")) {
+				String aoiInfo = 
+						separator+regressionInfo.getId()
+						+separator+regressionInfo.getDaia()
+						+separator+regressionInfo.getKind()
+						+separator+regressionInfo.getRelationActivation();
+				logDuration(LOGGER, aoiInfo, empFix,
+						empFix.getStartTimestampMs(),
+						empiricalPathDurationMs.count,
+						firstFixationOnPath.generatedStart, generatedPathDurationMs.count,
+						generatedPathDurationMs.count-empiricalPathDurationMs.count);
+			}
 			
 			// Save for IA regression paths for aggregation
 			if(regressionInfo.getDaia().equals("ia")) {

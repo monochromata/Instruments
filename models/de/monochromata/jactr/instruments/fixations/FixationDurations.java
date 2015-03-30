@@ -113,6 +113,11 @@ public class FixationDurations extends AbstractInstrument {
 					+separator+fixation.getTrialId()
 					+separator+fixation.getPageId()
 					+separator+fixation.getCondition()
+					+separator+empiricalStartMs
+					+separator+String.format("%1$4d", empiricalDurationMs)
+					+separator+String.format("%1$5.2f", generatedStartS)
+					+separator+String.format("%1$4d", generatedDurationMs)
+					+separator+String.format("%1$4d", generatedVsEmpiricalDurationMs)
 					+separator+fixation.getNumber()
 					+additionalInfo
 					+separator+fixation.getFoveatedWord().getUri()
@@ -121,12 +126,7 @@ public class FixationDurations extends AbstractInstrument {
 					+separator+fixation.getFoveatedWord().getLength()
 					+separator+fixation.getFoveatedWord().getWord()
 					+separator+fixation.getFoveatedWord().getAbsoluteCenterX()
-					+separator+fixation.getFoveatedWord().getAbsoluteCenterY()
-					+separator+empiricalStartMs
-					+separator+empiricalDurationMs
-					+separator+generatedStartS
-					+separator+generatedDurationMs
-					+separator+generatedVsEmpiricalDurationMs;
+					+separator+fixation.getFoveatedWord().getAbsoluteCenterY();
 			try {
 				writer.println(message);
 			} finally {

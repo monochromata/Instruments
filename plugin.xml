@@ -51,6 +51,10 @@
                name="logSeparator"
                value=";">
          </parameter>
+         <parameter
+               name="logIndirectAnaphorsOnly"
+               value="true">
+         </parameter>
       </instrument>
       <instrument
             class="de.monochromata.jactr.instruments.activation.ActivationBeforeRegression"
@@ -66,6 +70,10 @@
          <parameter
                name="logSeparator"
                value=";">
+         </parameter>
+         <parameter
+               name="logIndirectAnaphorsOnly"
+               value="true">
          </parameter>
       </instrument>
       <instrument
